@@ -1,0 +1,220 @@
+@import "tailwindcss";
+
+/* Theme is driven by attributes on <html> (see hooks/useApplyPrefs.ts):
+   data-theme = light | dark, data-accent = green | blue | violet | amber | rose,
+   data-density = comfortable | compact, data-motion = full | reduced. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-sidebar: var(--sidebar);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-glass: var(--glass);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
+  --shadow-glow: 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent), 0 0 32px color-mix(in srgb, var(--accent) 28%, transparent);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-ping-slow: ping-slow 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  --animate-spin-fast: spin 0.7s linear infinite;
+}
+
+:root {
+  --canvas: #f5f6f8;
+  --sidebar: #eceef2;
+  --surface: #ffffff;
+  --surface-2: #f1f3f6;
+  --surface-3: #e6e9ee;
+  --glass: rgb(255 255 255 / 0.82);
+  --line: rgb(15 23 42 / 0.08);
+  --line-strong: rgb(15 23 42 / 0.15);
+  --fg: #0e1420;
+  --fg-muted: #505c6c;
+  --fg-subtle: #8792a2;
+  --danger: #e5484d;
+  --success: #1fa463;
+  --warning: #d98a00;
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.05), 0 1px 1px rgb(15 23 42 / 0.03);
+  --shadow-pop: 0 24px 64px -12px rgb(15 23 42 / 0.25), 0 8px 24px -8px rgb(15 23 42 / 0.12);
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --canvas: #0c0e11;
+  --sidebar: #111419;
+  --surface: #15181d;
+  --surface-2: #1b1f25;
+  --surface-3: #252a32;
+  --glass: rgb(22 25 31 / 0.84);
+  --line: rgb(255 255 255 / 0.07);
+  --line-strong: rgb(255 255 255 / 0.13);
+  --fg: #eef1f5;
+  --fg-muted: #a2abb8;
+  --fg-subtle: #6b7584;
+  --danger: #ff6369;
+  --success: #3dd68c;
+  --warning: #ffb224;
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-pop: 0 30px 80px -10px rgb(0 0 0 / 0.65), 0 0 0 1px rgb(255 255 255 / 0.06);
+  color-scheme: dark;
+}
+
+:root,
+[data-accent="green"] { --accent: #22b867; --accent-strong: #189c55; --on-accent: #ffffff; }
+[data-accent="blue"] { --accent: #3b82f6; --accent-strong: #2563eb; --on-accent: #ffffff; }
+[data-accent="violet"] { --accent: #8b5cf6; --accent-strong: #7c3aed; --on-accent: #ffffff; }
+[data-accent="amber"] { --accent: #f5a524; --accent-strong: #dd8d0b; --on-accent: #1d1302; }
+[data-accent="rose"] { --accent: #f43f5e; --accent-strong: #e11d48; --on-accent: #ffffff; }
+
+html { font-size: 16px; }
+html[data-density="compact"] { font-size: 14.5px; }
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--canvas);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* Desktop apps do not select chrome text by accident. Content opts back in with select-text. */
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Layered so Tailwind utilities (e.g. outline-none on inputs) can override it. */
+@layer base {
+  ::selection {
+    background: color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+
+  :focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 80%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+/* Slim overlay scrollbars. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--fg-subtle); }
+::-webkit-scrollbar-track { background: transparent; }
+
+[data-motion="reduced"] *,
+[data-motion="reduced"] *::before,
+[data-motion="reduced"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@keyframes ping-slow {
+  75%, 100% { transform: scale(2.4); opacity: 0; }
+}
+
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+/* Picture elements created by the controllers (outside React). */
+@layer components {
+  /* WebKit draws a native play button on an idle <video>; the app has its own overlay. */
+  video::-webkit-media-controls,
+  video::-webkit-media-controls-start-playback-button,
+  video::-webkit-media-controls-overlay-play-button,
+  video::-webkit-media-controls-panel {
+    display: none !important;
+    -webkit-appearance: none;
+  }
+
+  .screen-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  /* Stream window: the video stays in normal flow. Moving or hiding it after
+     playback starts blanks the picture in WebKit. */
+  .stream-video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+  }
+
+  .stream-frame {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+  }
+
+  .qr-plate svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+  }
+}

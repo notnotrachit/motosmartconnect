@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Connect</title>
+    <script>
+      // Apply saved appearance before first paint so the window never flashes the wrong theme.
+      try {
+        var prefs = (JSON.parse(localStorage.getItem("smartconnect.ui") || "{}").state || {}).prefs || {};
+        var theme = prefs.theme || "system";
+        if (theme === "system") theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        var root = document.documentElement;
+        root.dataset.theme = theme;
+        root.dataset.accent = prefs.accent || "green";
+        root.dataset.density = prefs.density || "comfortable";
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
