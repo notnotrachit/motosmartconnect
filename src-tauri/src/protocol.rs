@@ -369,22 +369,26 @@ pub fn unquote_session_ids(input: &str) -> String {
     String::from_utf8(out).unwrap_or_else(|_| input.to_string())
 }
 
-pub fn invite_json(nonce_b64: &str, name: &str, fp_b64: &str, token: &str, port: u16, ips: &[String]) -> String {
+pub fn invite_json(nonce_b64: &str, real_b64: &str, name: &str, fp_b64: &str, token: &str, port: u16, ips: &[String]) -> String {
     let wifi: Vec<&str> = ips.iter().map(String::as_str).collect();
     json!({
         "ver": 2,
         "cmd": 1,
+        "appVer": APP_VER,
+        "i3": 1,
         "deviceId": nonce_b64,
+        "realDeviceId": real_b64,
         "deviceName": name,
         "fp": fp_b64,
         "token": token,
         "policies": [{ "wifi": wifi }],
         "wsPort": port,
-        "appVer": APP_VER,
         "verCode": VER_CODE,
+        "verName": APP_VER,
         "os": 6,
         "scType": 2,
-        "type": 4
+        "type": 4,
+        "bleAddress": ""
     })
     .to_string()
 }

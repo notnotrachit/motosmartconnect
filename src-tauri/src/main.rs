@@ -2,5 +2,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
+    smartconnect_mac_lib::adopt_bundle();
     smartconnect_mac_lib::run()
 }

@@ -30,6 +30,8 @@ pub struct NoticeView {
     pub content: String,
     pub can_reply: bool,
     pub actions: Vec<ActionView>,
+    /// Phone app icon as a data URL. Empty until the icon is known.
+    pub icon: String,
 }
 
 #[derive(Clone, Serialize)]
@@ -79,6 +81,7 @@ struct Notice {
     content: String,
     can_reply: bool,
     actions: Vec<ActionView>,
+    icon: String,
     fingerprint: String,
     shown_at: Instant,
 }
@@ -114,7 +117,14 @@ pub enum Effect {
     Send { service: i64, data: Value },
     Note(String),
     Publish,
-    Banner { title: String, body: String },
+    Banner {
+        app: String,
+        title: String,
+        body: String,
+        key: String,
+        pkg: String,
+        icon_png: Option<Vec<u8>>,
+    },
     Paste(String),
     Pull(PullJob),
     Offer {
@@ -270,6 +280,7 @@ impl Desk {
                 content: notice.content.clone(),
                 can_reply: notice.can_reply,
                 actions: notice.actions.clone(),
+                icon: notice.icon.clone(),
             })
             .collect()
     }
@@ -1073,6 +1084,7 @@ impl Desk {
                 actions.push(ActionView { id, name });
             }
         }
+        let icon = embedded_icon(&body).or_else(|| self.icon_url_for(&pkg)).unwrap_or_default();
         let fingerprint = format!("{title}\n{content}\n{}", actions.len());
         let previous = self.notifications.iter().find(|(id, _)| id == &key).map(|(_, notice)| notice.clone());
         if let Some(previous) = &previous {
@@ -1091,6 +1103,7 @@ impl Desk {
                 content: content.clone(),
                 can_reply,
                 actions,
+                icon: icon.clone(),
                 fingerprint: fingerprint.clone(),
                 shown_at: Instant::now(),
             },
@@ -1101,11 +1114,39 @@ impl Desk {
         let mut effects = vec![Effect::Publish];
         if previous.as_ref().is_none_or(|item| item.fingerprint != fingerprint) {
             effects.push(Effect::Banner {
+                app: clip_banner(&app),
                 title: clip_banner(&title),
                 body: clip_banner(&content),
+                key: self.notifications.front().map(|(key, _)| key.clone()).unwrap_or_default(),
+                pkg: self.notifications.front().map(|(_, notice)| notice.pkg.clone()).unwrap_or_default(),
+                icon_png: png_of_data_url(&icon),
             });
         }
         effects
+    }
+
+    /// The phone app's icon, matched by the name the app list uses or by package.
+    fn icon_url_for(&self, pkg: &str) -> Option<String> {
+        if pkg.is_empty() {
+            return None;
+        }
+        let named = self.apps.iter().find(|app| app.pkg == pkg).map(|app| app.icon_name.as_str()).unwrap_or("");
+        if let Some(url) = self.icons.get(named).filter(|url| !url.is_empty()) {
+            return Some(url.clone());
+        }
+        for key in [pkg.to_string(), format!("{pkg}.png"), format!("{pkg}.jpg"), format!("{pkg}.webp")] {
+            if let Some(url) = self.icons.get(&key) {
+                return Some(url.clone());
+            }
+        }
+        self.icons
+            .iter()
+            .find(|(key, _)| {
+                let stem = key.rsplit(['/', '\\']).next().unwrap_or(key);
+                let stem = stem.rsplit_once('.').map(|(stem, _)| stem).unwrap_or(stem);
+                stem == pkg
+            })
+            .map(|(_, url)| url.clone())
     }
 
     fn on_clipboard(&mut self, data: &Value) -> Vec<Effect> {
@@ -1603,6 +1644,34 @@ fn clip_text(text: &str) -> String {
         return text.to_string();
     }
     text.chars().take(100_000).collect()
+}
+
+fn embedded_icon(body: &Value) -> Option<String> {
+    for key in ["icon", "largeIcon", "smallIcon", "appIcon", "picture"] {
+        let Some(text) = text_field(body, key) else { continue };
+        if text.starts_with("data:image/") && text.len() < 400_000 {
+            return Some(text);
+        }
+        if text.len() < 300_000 && (text.starts_with("iVBORw0KGgo") || text.starts_with("/9j/")) {
+            let kind = if text.starts_with("/9j/") { "jpeg" } else { "png" };
+            return Some(format!("data:image/{kind};base64,{text}"));
+        }
+    }
+    None
+}
+
+fn png_of_data_url(url: &str) -> Option<Vec<u8>> {
+    let (kind, data) = url.split_once(";base64,")?;
+    if !kind.starts_with("data:image/") {
+        return None;
+    }
+    let bytes = base64::engine::general_purpose::STANDARD.decode(data).ok()?;
+    if bytes.len() < 32 || bytes.len() > 256 * 1024 {
+        return None;
+    }
+    let png = bytes.starts_with(b"\x89PNG\r\n\x1a\n");
+    let jpeg = bytes.starts_with(b"\xff\xd8\xff");
+    if png || jpeg { Some(bytes) } else { None }
 }
 
 fn clip_banner(text: &str) -> String {

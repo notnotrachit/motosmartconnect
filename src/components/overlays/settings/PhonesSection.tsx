@@ -48,7 +48,7 @@ function PhoneRow({ phone }: { phone: PhoneView }) {
   const [busy, setBusy] = useState(false);
   const confirmForget = useUi((s) => s.prefs.confirmForget);
   const name = phone.name || "Phone";
-  const status = phone.connected ? "Connected" : phone.userDisconnected ? "Disconnected on the phone" : "Saved · reconnects when Smart Connect opens";
+  const status = phone.connected ? "Connected" : phone.userDisconnected ? "Disconnected on the phone" : "Saved · reconnects in the background";
 
   const forget = async () => {
     if (confirmForget) {

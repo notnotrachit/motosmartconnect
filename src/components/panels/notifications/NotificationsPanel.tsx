@@ -65,7 +65,7 @@ export function NotificationsPanel() {
           <ul className="flex flex-col gap-2.5">
             <AnimatePresence initial={false} mode="popLayout">
               {shown.map((notice) => (
-                <NotificationCard key={notice.key} notice={notice} icon={iconFor(notice.pkg, snapshot, icons)} />
+                <NotificationCard key={notice.key} notice={notice} icon={notice.icon || iconFor(notice.pkg, snapshot, icons)} />
               ))}
             </AnimatePresence>
           </ul>

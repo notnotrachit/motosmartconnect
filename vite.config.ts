@@ -6,7 +6,7 @@ import { defineConfig } from "vite";
 const host = process.env.TAURI_DEV_HOST;
 const here = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
-// Two pages: the main window and the per-app stream window that Rust opens as stream.html.
+// Main window, per-app stream window, and the compact menu bar panel.
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   clearScreen: false,
@@ -28,6 +28,7 @@ export default defineConfig({
       input: {
         main: here("./index.html"),
         stream: here("./stream.html"),
+        menu: here("./menu.html"),
       },
     },
   },

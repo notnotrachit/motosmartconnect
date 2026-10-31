@@ -8,7 +8,7 @@ This project is not affiliated with Motorola or Lenovo.
 
 The window keeps the phone on the left and the feature panels on the right.
 
-- **Pair** by scanning the code in Smart Connect on the phone. A paired phone reconnects when Smart Connect is open. The Mac also calls it back on the local network.
+- **Pair** by scanning the code in Smart Connect on the phone. After that, opening this app wakes the paired phone over Bluetooth and Wi-Fi, even when Smart Connect is in the background. Bluetooth is not turned on for this. A phone that disconnected itself stays disconnected until you press Connect.
 - **Screen.** Start mirroring to see the phone. Click and type on the picture. Back, Home, and Recents use the phone’s keys. When the screen is idle, the well shows the phone’s wallpaper.
 - **Apps.** Open an app in its own window.
 - **Desktop.** Open the phone in a wide desktop view.
@@ -30,7 +30,7 @@ Hotspot is not offered. Turning that tile on can start tethering before the Mac 
 - The phone and the Mac on the same Wi-Fi
 - Smart Connect installed on the phone
 
-The first time macOS asks, allow incoming connections. To use the lock tile, allow this app to control System Events under Privacy & Security. Notification banners outside the window need the usual macOS notification permission. The list inside the app does not.
+The first time macOS asks, allow incoming connections and Bluetooth. Bluetooth is only used to wake a paired phone; the app does not turn the radio on. To use the lock tile, allow this app to control System Events under Privacy & Security. Notification banners outside the window need the usual macOS notification permission. The list inside the app does not.
 
 ## Run
 
@@ -41,7 +41,7 @@ npm run tauri dev
 
 The app listens on port 52020, or the next free port through 52040, and the pairing code uses whichever port opened. Quit any other Smart Connect host that is already listening on that port before you start this one.
 
-A paired phone is remembered. Open Smart Connect on the phone and keep it in front when you want it to connect. There is no Lenovo account or cloud pairing.
+A paired phone is remembered. Starting this app wakes it over Bluetooth and on the local network, so Smart Connect can stay in the background. If Bluetooth is off, open Smart Connect on the phone instead. A phone that disconnected itself stays disconnected until you press Connect. There is no Lenovo account or cloud pairing.
 
 ## Keyboard
 

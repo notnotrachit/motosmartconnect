@@ -121,6 +121,8 @@ struct Shared {
     mirror: Arc<Mirror>,
     pair_wake: Notify,
     share_ready: Notify,
+    reconnect_wake: Notify,
+    wake_busy: AtomicBool,
     page_offers: Mutex<Vec<PageOffer>>,
 }
 
@@ -184,6 +186,8 @@ impl Engine {
                 mirror: Mirror::new(),
                 pair_wake: Notify::new(),
                 share_ready: Notify::new(),
+                reconnect_wake: Notify::new(),
+                wake_busy: AtomicBool::new(false),
                 page_offers: Mutex::new(Vec::new()),
             }),
         };
@@ -238,6 +242,8 @@ impl Engine {
             self.note("Pairing code is off. A saved phone can still reconnect.");
             self.publish();
         }
+
+        self.spawn_reconnect();
 
         let acceptor = tokio_rustls::TlsAcceptor::from(server);
         let engine = self.clone();
@@ -956,6 +962,7 @@ impl Engine {
             let guard = self.lock();
             protocol::invite_json(
                 &protocol::b64(&guard.nonce),
+                &guard.identity.real_id,
                 &guard.identity.device_name,
                 &guard.identity.fp_b64,
                 &token,
@@ -1031,6 +1038,169 @@ impl Engine {
             return;
         }
         self.lock().mdns_fullname = Some(fullname);
+    }
+
+    /// Ask saved phones to dial in. A phone the user disconnected is left alone
+    /// until Connect is pressed.
+    pub fn reconnect_saved(&self) {
+        let mut guard = self.lock();
+        let mut changed = false;
+        for phone in &mut guard.phones {
+            if phone.user_disconnected {
+                phone.user_disconnected = false;
+                changed = true;
+            }
+        }
+        if changed {
+            let identity = guard.identity.clone();
+            let phones = guard.phones.clone();
+            drop(guard);
+            let _ = store::save(&identity, &phones);
+        } else {
+            drop(guard);
+        }
+        self.note("Looking for your phone.");
+        self.publish();
+        self.shared.reconnect_wake.notify_one();
+    }
+
+    fn has_offline_phone(&self) -> bool {
+        let guard = self.lock();
+        guard.port != 0
+            && guard.phones.iter().any(|phone| {
+                !phone.user_disconnected && !guard.senders.contains_key(&phone.real_id)
+            })
+    }
+
+    fn wake_targets(&self) -> Vec<crate::wake::Target> {
+        let pending: Vec<(String, Vec<u8>, String)> = {
+            let guard = self.lock();
+            if guard.port == 0 {
+                return Vec::new();
+            }
+            guard
+                .phones
+                .iter()
+                .filter_map(|phone| {
+                    if phone.user_disconnected || guard.senders.contains_key(&phone.real_id) {
+                        return None;
+                    }
+                    let real = protocol::b64_decode(&phone.real_id)?;
+                    Some((phone.name.clone(), real, phone.our_key.clone()))
+                })
+                .collect()
+        };
+        pending
+            .into_iter()
+            .filter_map(|(name, real, key)| {
+                let frame = self.sealed_invite(&key)?;
+                Some(crate::wake::Target { name, real, frame })
+            })
+            .collect()
+    }
+
+    fn spawn_reconnect(&self) {
+        let engine = self.clone();
+        tokio::spawn(async move {
+            let mut next_attempt = Instant::now();
+            let mut gap = Duration::from_secs(1);
+            let mut last_ips = engine.lock().ips.clone();
+            let mut wall = SystemTime::now();
+            let mut mono = Instant::now();
+            let mut miss_noted = false;
+            engine.shared.reconnect_wake.notify_one();
+            loop {
+                let until = next_attempt.saturating_duration_since(Instant::now());
+                let slice = Duration::from_secs(4).min(until.max(Duration::from_millis(400)));
+                tokio::select! {
+                    _ = engine.shared.reconnect_wake.notified() => {
+                        next_attempt = Instant::now();
+                        gap = Duration::from_secs(1);
+                        miss_noted = false;
+                    }
+                    _ = tokio::time::sleep(slice) => {}
+                }
+
+                let ips = net::local_ipv4s();
+                if ips != last_ips {
+                    last_ips = ips.clone();
+                    engine.lock().ips = ips;
+                    engine.refresh_mdns();
+                    engine.note("The network changed. Looking for your phone.");
+                    engine.publish();
+                    next_attempt = Instant::now();
+                    gap = Duration::from_secs(1);
+                    miss_noted = false;
+                }
+                let wall_delta = SystemTime::now().duration_since(wall).unwrap_or_default();
+                let mono_delta = mono.elapsed();
+                wall = SystemTime::now();
+                mono = Instant::now();
+                if wall_delta > mono_delta + Duration::from_secs(8) {
+                    engine.note("This Mac woke up. Looking for your phone.");
+                    engine.publish();
+                    next_attempt = Instant::now();
+                    gap = Duration::from_secs(1);
+                    miss_noted = false;
+                }
+                if Instant::now() < next_attempt {
+                    continue;
+                }
+                if !engine.has_offline_phone() {
+                    next_attempt = Instant::now() + Duration::from_secs(15);
+                    continue;
+                }
+                if engine.shared.wake_busy.swap(true, Ordering::AcqRel) {
+                    next_attempt = Instant::now() + Duration::from_secs(2);
+                    continue;
+                }
+                let targets = engine.wake_targets();
+                let result = if targets.is_empty() {
+                    Ok(crate::wake::WakeOutcome { names: Vec::new(), adverts: 0, payloads: 0, matched: 0 })
+                } else {
+                    engine.note("Waking your phone over Bluetooth.");
+                    engine.publish();
+                    crate::wake::push_invites(targets).await
+                };
+                engine.shared.wake_busy.store(false, Ordering::Release);
+                match result {
+                    Ok(outcome) if !outcome.names.is_empty() => {
+                        miss_noted = false;
+                        for name in outcome.names {
+                            engine.note(format!("{name} was asked to connect."));
+                        }
+                        engine.publish();
+                        gap = Duration::from_secs(8);
+                    }
+                    Ok(outcome) => {
+                        if !miss_noted && engine.has_offline_phone() {
+                            let line = if outcome.matched > 0 {
+                                "The phone was found, but the wake message did not go through."
+                            } else if outcome.payloads > 0 {
+                                "A phone is nearby, but it is not the one paired with this Mac."
+                            } else if outcome.adverts > 0 {
+                                "A nearby device answered, but it did not share wake data."
+                            } else {
+                                "No paired phone answered over Bluetooth yet. Keep the phone nearby, with Bluetooth on. It still connects when Smart Connect is open."
+                            };
+                            engine.note(line);
+                            engine.publish();
+                            miss_noted = true;
+                        }
+                        gap = Duration::from_secs(4);
+                    }
+                    Err(err) => {
+                        if !miss_noted {
+                            engine.note(err);
+                            engine.publish();
+                            miss_noted = true;
+                        }
+                        gap = Duration::from_secs(30);
+                    }
+                }
+                next_attempt = Instant::now() + gap;
+            }
+        });
     }
 
     fn spawn_browse(&self) {
@@ -1625,7 +1795,7 @@ impl Engine {
                 }
                 Effect::Note(line) => self.note(line),
                 Effect::Publish => publish = true,
-                Effect::Banner { title, body } => self.show_banner(title, body),
+                Effect::Banner { app, title, body, key, pkg, icon_png } => self.show_banner(app, title, body, key, pkg, icon_png),
                 Effect::Paste(text) => self.write_clipboard(text),
                 Effect::Pull(job) => self.spawn_pull(job),
                 Effect::Offer { session_id, sdp, quiet, pkg } => {
@@ -1803,19 +1973,12 @@ impl Engine {
         );
     }
 
-    fn show_banner(&self, title: String, body: String) {
+    fn show_banner(&self, app: String, title: String, body: String, key: String, pkg: String, icon_png: Option<Vec<u8>>) {
+        crate::banner::bind_app(self.shared.app.clone());
         let engine = self.clone();
-        tokio::task::spawn_blocking(move || {
-            let body = if body.is_empty() { " ".to_string() } else { body };
-            let result = std::process::Command::new("osascript")
-                .arg("-e")
-                .arg("on run argv\ndisplay notification item 2 of argv with title item 1 of argv\nend run")
-                .arg("--")
-                .arg(&title)
-                .arg(&body)
-                .status();
-            if !matches!(result, Ok(status) if status.success()) && engine.lock().desk.mark_banner_failed() {
-                engine.note("macOS did not show a banner. Allow notifications for this app to see them outside the window.");
+        crate::banner::show(app, title, body, key, pkg, icon_png, move || {
+            if engine.lock().desk.mark_banner_failed() {
+                engine.note("macOS is not showing banners. Allow notifications for Smart Connect in System Settings.");
                 engine.publish();
             }
         });

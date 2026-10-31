@@ -14,7 +14,7 @@ import { stripLogTime } from "@/lib/format";
  */
 
 export const SCREEN_IDLE = "The phone screen shows here.";
-export const SCREEN_OFFLINE = "Open Smart Connect on the phone to reconnect.";
+export const SCREEN_OFFLINE = "Looking for your phone. It can stay in the background if Bluetooth is on.";
 export const SCREEN_ASKING = "Asking the phone to share its screen…";
 
 const MIRROR_STATUS: Record<string, string> = {

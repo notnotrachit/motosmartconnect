@@ -69,6 +69,30 @@ export async function openNotice(notice: NoticeView) {
   return run(() => api.notificationOpen(notice.key));
 }
 
+/** Open a macOS-banner target in its stream window, then activate it on the phone. */
+export async function openBannerNotice(key: string, pkgFromBanner: string) {
+  const snapshot = useEngine.getState().snapshot;
+  const notice = snapshot?.notifications.find((item) => item.key === key);
+  const app = snapshot?.apps.find((item) => item.pkg === (notice?.pkg || pkgFromBanner))
+    ?? snapshot?.apps.find((item) => item.name === notice?.app);
+  const pkg = notice?.pkg || pkgFromBanner || app?.pkg || "";
+  const title = notice?.app || app?.name || pkg || "Phone app";
+
+  if (pkg) await showStream(pkg, title);
+
+  if (notice) {
+    const opened = await run(() => api.notificationOpen(key));
+    // A notification can omit its package even when the installed app list has it.
+    if (opened && !notice.pkg && app) return run(() => api.startApp(app.pkg, app.cmp, app.userId));
+    return opened;
+  }
+
+  // The phone may have removed the notification before its macOS banner was clicked.
+  if (app) return run(() => api.startApp(app.pkg, app.cmp, app.userId));
+  if (pkg) return run(() => api.startApp(pkg, "", 0));
+  return false;
+}
+
 // ------------------------------------------------------------------ streams
 
 export async function showStream(pkg: string, title: string) {

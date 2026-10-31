@@ -26,7 +26,7 @@ export function ScreenOverlay({ phase, label }: ScreenOverlayProps) {
           {phase === "idle" && <Idle />}
           {phase === "offline" && (
             <Message icon={<WifiOff size={22} />} title="Phone is offline">
-              Open Smart Connect on the phone to reconnect. Both devices need the same Wi-Fi.
+              Looking for your phone on Wi-Fi and Bluetooth. It can stay in the background. Both devices need the same Wi-Fi.
             </Message>
           )}
           {phase === "busy" && <Busy label={label} />}

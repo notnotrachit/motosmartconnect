@@ -11,11 +11,13 @@ import type {
 
 /** Typed wrappers for every command registered in src-tauri/src/lib.rs. */
 export const api = {
+  quit: () => invoke<void>("quit_app"),
   snapshot: () => invoke<Snapshot>("snapshot"),
   wallpaper: () => invoke<string>("wallpaper"),
   setName: (name: string) => invoke<Snapshot>("set_name", { name }),
   refreshQr: () => invoke<Snapshot>("refresh_qr"),
   beginPairing: () => invoke<Snapshot>("begin_pairing"),
+  reconnect: () => invoke<Snapshot>("reconnect"),
   endPairing: () => invoke<Snapshot>("end_pairing"),
   unpair: (realId: string) => invoke<Snapshot>("unpair", { realId }),
 

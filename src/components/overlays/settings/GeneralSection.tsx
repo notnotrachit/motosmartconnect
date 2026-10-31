@@ -85,6 +85,9 @@ export function GeneralSection() {
         <SettingRow label="New texts" description="Show a toast when a text arrives in a conversation you aren't viewing.">
           <Switch label="New texts" checked={prefs.messageToasts} onChange={(v) => setPref("messageToasts", v)} />
         </SettingRow>
+        <SettingRow label="Open app when a banner is clicked" description="Bring up the phone app stream and activate that notification on the phone.">
+          <Switch label="Open phone app from banner" checked={prefs.openNotificationOnClick} onChange={(v) => setPref("openNotificationOnClick", v)} />
+        </SettingRow>
         <SettingRow label="Confirm before forgetting" description="Ask before removing a paired phone.">
           <Switch label="Confirm before forgetting" checked={prefs.confirmForget} onChange={(v) => setPref("confirmForget", v)} />
         </SettingRow>

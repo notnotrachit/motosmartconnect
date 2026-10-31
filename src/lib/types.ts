@@ -21,6 +21,8 @@ export interface NoticeView {
   content: string;
   canReply: boolean;
   actions: NoticeAction[];
+  /** Phone app icon as a data URL, or empty. */
+  icon: string;
 }
 
 export interface AppView {

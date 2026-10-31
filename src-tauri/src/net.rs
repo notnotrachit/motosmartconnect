@@ -89,17 +89,26 @@ pub async fn bind_listener() -> Result<(TcpListener, u16)> {
 
 pub fn local_ipv4s() -> Vec<String> {
     let mut found = Vec::new();
+    let mut extra = Vec::new();
     if let Ok(interfaces) = local_ip_address::list_afinet_netifas() {
-        for (_name, addr) in interfaces {
+        for (name, addr) in interfaces {
             if let IpAddr::V4(ipv4) = addr {
                 if usable(ipv4) {
                     let text = ipv4.to_string();
-                    if !found.contains(&text) {
-                        found.push(text);
+                    // Bridges and virtual adapters are not the network the phone is on.
+                    if name.starts_with("en") {
+                        if !found.contains(&text) {
+                            found.push(text);
+                        }
+                    } else if !extra.contains(&text) {
+                        extra.push(text);
                     }
                 }
             }
         }
+    }
+    if found.is_empty() {
+        found = extra;
     }
     if found.is_empty() {
         found.push("127.0.0.1".to_string());

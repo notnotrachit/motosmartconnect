@@ -22,6 +22,8 @@ export interface Prefs {
   connectionToasts: boolean;
   /** Show a toast when a text arrives outside the open conversation. */
   messageToasts: boolean;
+  /** Open the phone app and activate a notification when its macOS banner is clicked. */
+  openNotificationOnClick: boolean;
 }
 
 const DEFAULT_PREFS: Prefs = {
@@ -33,6 +35,7 @@ const DEFAULT_PREFS: Prefs = {
   fileToasts: true,
   connectionToasts: true,
   messageToasts: true,
+  openNotificationOnClick: true,
 };
 
 interface UiStore {

@@ -1,3 +1,5 @@
+mod app_bundle;
+mod banner;
 mod cam_publish;
 mod desk;
 mod engine;
@@ -8,7 +10,9 @@ mod mirror;
 mod nfs;
 mod net;
 mod protocol;
+mod wake;
 mod store;
+mod tray;
 
 use engine::{Engine, Snapshot};
 use tauri::{window::Color, Manager, State, WebviewUrl, WebviewWindowBuilder, WindowEvent};
@@ -16,6 +20,11 @@ use tauri::{window::Color, Manager, State, WebviewUrl, WebviewWindowBuilder, Win
 #[tauri::command]
 fn snapshot(state: State<'_, Engine>) -> Snapshot {
     state.snapshot()
+}
+
+#[tauri::command]
+fn quit_app(app: tauri::AppHandle) {
+    app.exit(0);
 }
 
 #[tauri::command]
@@ -38,6 +47,12 @@ fn refresh_qr(state: State<'_, Engine>) -> Snapshot {
 #[tauri::command]
 fn begin_pairing(state: State<'_, Engine>) -> Snapshot {
     state.begin_pairing();
+    state.snapshot()
+}
+
+#[tauri::command]
+fn reconnect(state: State<'_, Engine>) -> Snapshot {
+    state.reconnect_saved();
     state.snapshot()
 }
 
@@ -255,6 +270,11 @@ fn reveal_file(state: State<'_, Engine>, path: String) -> Result<(), String> {
     state.reveal_file(&path)
 }
 
+/// Dev launches step into an app bundle so banners belong to Smart Connect.
+pub fn adopt_bundle() {
+    app_bundle::adopt_bundle();
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -264,6 +284,9 @@ pub fn run() {
                 Box::new(std::io::Error::other(format!("{err:#}")))
             })?;
             app.manage(engine.clone());
+            banner::bind_app(app.handle().clone());
+            banner::install();
+            tray::install(app)?;
             tauri::async_runtime::spawn(async move {
                 engine.boot().await;
             });
@@ -271,10 +294,12 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             snapshot,
+            quit_app,
             wallpaper,
             set_name,
             refresh_qr,
             begin_pairing,
+            reconnect,
             end_pairing,
             unpair,
             messages_open,

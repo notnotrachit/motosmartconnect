@@ -3057,6 +3057,7 @@ checksum = "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272"
 dependencies = [
  "bitflags 2.13.2",
  "block2",
+ "libc",
  "objc2",
  "objc2-core-foundation",
 ]
@@ -3111,7 +3112,10 @@ version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9df9128cbbfef73cda168416ccf7f837b62737d748333bfe9ab71c245d76613e"
 dependencies = [
+ "bitflags 2.13.2",
+ "block2",
  "objc2",
+ "objc2-core-location",
  "objc2-foundation",
 ]
 
@@ -4312,14 +4316,19 @@ dependencies = [
  "aes-gcm",
  "anyhow",
  "base64 0.22.1",
+ "block2",
  "bytes",
  "dirs",
+ "dispatch2",
  "futures-util",
  "hex",
  "hostname",
  "image",
  "local-ip-address",
  "mdns-sd",
+ "objc2",
+ "objc2-foundation",
+ "objc2-user-notifications",
  "openh264",
  "qrcode",
  "rand 0.8.8",

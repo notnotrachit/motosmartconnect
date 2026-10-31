@@ -48,7 +48,7 @@ function announce(previous: Snapshot | null, next: Snapshot) {
       if (!was.connected && phone.connected) toast.success(`${phone.name || "Phone"} connected`);
       if (was.connected && !phone.connected) {
         toast.warning(`${phone.name || "Phone"} disconnected`, {
-          body: phone.userDisconnected ? "It was disconnected on the phone." : "Open Smart Connect on the phone to reconnect.",
+          body: phone.userDisconnected ? "It was disconnected on the phone." : "It will reconnect when the phone is nearby.",
         });
       }
     }
