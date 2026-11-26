@@ -8,6 +8,18 @@ export interface PhoneView {
   userDisconnected: boolean;
 }
 
+/** What the phone reports about itself. Each field is null until the phone has sent it. */
+export interface PhoneStatus {
+  /** Battery percent, 0 to 100. */
+  battery: number | null;
+  charging: boolean | null;
+  wifi: boolean | null;
+  /** Raw signal value from the phone. Its scale is not documented. */
+  wifiSignal: number | null;
+  dataSignal: number | null;
+  bluetooth: boolean | null;
+}
+
 export interface NoticeAction {
   id: number;
   name: string;
@@ -107,6 +119,8 @@ export interface Snapshot {
   cross: CrossView;
   lanIp: string;
   messages: SmsView;
+  /** The connected phone's own status, or null when no phone is connected. */
+  phoneStatus: PhoneStatus | null;
 }
 
 export interface IconPack {

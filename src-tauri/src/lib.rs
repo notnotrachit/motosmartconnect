@@ -1,8 +1,11 @@
+mod account;
 mod app_bundle;
 mod banner;
+mod cloud;
 mod cam_publish;
 mod desk;
 mod engine;
+mod phone_status;
 mod power;
 mod sms;
 mod fex;
@@ -270,6 +273,37 @@ fn reveal_file(state: State<'_, Engine>, path: String) -> Result<(), String> {
     state.reveal_file(&path)
 }
 
+#[tauri::command]
+fn account_status() -> account::AccountView {
+    account::view()
+}
+
+#[tauri::command]
+async fn account_sign_in() -> Result<account::AccountView, String> {
+    account::begin().await
+}
+
+#[tauri::command]
+async fn account_finish(url: String) -> Result<account::AccountView, String> {
+    account::finish(&url).await
+}
+
+#[tauri::command]
+fn account_sign_out() -> account::AccountView {
+    account::sign_out()
+}
+
+#[tauri::command]
+async fn account_refresh_devices() -> Result<account::AccountView, String> {
+    account::refresh_devices().await
+}
+
+#[tauri::command]
+async fn account_connect(state: State<'_, Engine>, device_id: String) -> Result<account::AccountView, String> {
+    let (name, real_id, port) = state.cloud_self();
+    account::connect(&name, &real_id, port, &device_id).await
+}
+
 /// Dev launches step into an app bundle so banners belong to Smart Connect.
 pub fn adopt_bundle() {
     app_bundle::adopt_bundle();
@@ -279,6 +313,14 @@ pub fn adopt_bundle() {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .on_window_event(|window, event| {
+            if window.label() == "main" {
+                if let WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
+        })
         .setup(|app| {
             let engine = Engine::new(app.handle().clone()).map_err(|err| -> Box<dyn std::error::Error> {
                 Box::new(std::io::Error::other(format!("{err:#}")))
@@ -286,6 +328,7 @@ pub fn run() {
             app.manage(engine.clone());
             banner::bind_app(app.handle().clone());
             banner::install();
+            account::install(app.handle().clone());
             tray::install(app)?;
             tauri::async_runtime::spawn(async move {
                 engine.boot().await;
@@ -330,10 +373,37 @@ pub fn run() {
             app_icons,
             reveal_file,
             list_phone,
-            save_phone
+            save_phone,
+            account_status,
+            account_sign_in,
+            account_finish,
+            account_sign_out,
+            account_refresh_devices,
+            account_connect
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            match event {
+                tauri::RunEvent::Opened { urls } => {
+                    for url in urls {
+                        let text = url.as_str();
+                        if text.contains("code=") || text.contains("authcode") || text.contains("lenovoid.wust") || text.contains("wust=") {
+                            account::accept_url(text);
+                        }
+                    }
+                }
+                #[cfg(target_os = "macos")]
+                tauri::RunEvent::Reopen { .. } => {
+                    if let Some(window) = app.get_webview_window("main") {
+                        let _ = window.show();
+                        let _ = window.unminimize();
+                        let _ = window.set_focus();
+                    }
+                }
+                _ => {}
+            }
+        });
 }
 
 fn stream_label(pkg: &str) -> String {

@@ -66,6 +66,8 @@ pub struct Snapshot {
     pub cross: desk::CrossView,
     pub lan_ip: String,
     pub messages: sms::SmsView,
+    /// The connected phone's own status. None when no phone is connected.
+    pub phone_status: Option<crate::phone_status::PhoneStatus>,
 }
 
 #[derive(Clone, Serialize)]
@@ -108,6 +110,7 @@ struct Inner {
     wallpaper_url: String,
     wallpaper_asked: bool,
     reported_power: Option<crate::power::HostPower>,
+    phone_status: Option<crate::phone_status::PhoneStatus>,
     sms: Sms,
 }
 
@@ -176,6 +179,7 @@ impl Engine {
                     wallpaper_url: String::new(),
                     wallpaper_asked: false,
                     reported_power: None,
+                    phone_status: None,
                     sms: Sms::new(),
                 }),
                 app,
@@ -320,6 +324,18 @@ impl Engine {
     /// The bytes are never written to the activity log.
     /// Windows asks with service 25 command 4 until `wallpaperState` is 7.
     /// That is the state where the phone is allowed to send the picture.
+    fn on_phone_status(&self, data: &Value) {
+        let Some(status) = crate::phone_status::parse(data) else { return };
+        {
+            let mut guard = self.lock();
+            if guard.phone_status == Some(status) {
+                return;
+            }
+            guard.phone_status = Some(status);
+        }
+        self.publish();
+    }
+
     fn ask_for_wallpaper(&self, data: &Value, tx: &mpsc::UnboundedSender<Message>) {
         let state = data.get("wallpaperState").and_then(Value::as_i64);
         let already = {
@@ -369,6 +385,12 @@ impl Engine {
         self.note("The phone's wallpaper is on the screen.");
     }
 
+    /// Name, saved id, and listener port for an account tunnel. The id is not logged.
+    pub fn cloud_self(&self) -> (String, String, u16) {
+        let guard = self.lock();
+        (guard.identity.device_name.clone(), guard.identity.real_id.clone(), guard.port)
+    }
+
     pub fn snapshot(&self) -> Snapshot {
         let guard = self.lock();
         let qr_expires_in = guard
@@ -407,6 +429,7 @@ impl Engine {
             cross: guard.desk.cross(),
             lan_ip: guard.ips.iter().find(|ip| *ip != "127.0.0.1").cloned().unwrap_or_default(),
             messages: guard.sms.view(),
+            phone_status: if guard.senders.is_empty() { None } else { guard.phone_status },
         }
     }
 
@@ -654,6 +677,9 @@ impl Engine {
         let src = message.get("srcServiceId").and_then(Value::as_i64).unwrap_or(service);
         let data = protocol::data_object(&message).unwrap_or_else(|| message.clone());
         let cmd = protocol::json_cmd(&data).or_else(|| protocol::json_cmd(&message)).unwrap_or(-1);
+        if service == 25 && cmd == 1 {
+            self.on_phone_status(&data);
+        }
         if let Some((raw, md5)) = find_wallpaper(&message).or_else(|| find_wallpaper(&data)) {
             self.store_wallpaper(&raw, &md5);
         } else if service == 25 && cmd == 1 {
@@ -745,6 +771,8 @@ impl Engine {
                 }
             }
             guard.senders.insert(real_id.clone(), (session, tx.clone()));
+            // The phone sends its status again after each connection. Drop the last one until it does.
+            guard.phone_status = None;
         }
         *phone_id = Some(real_id.clone());
         let verify = {

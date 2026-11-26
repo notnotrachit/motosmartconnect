@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Smart Connect",
+  "productName": "Moto Smart Connect",
   "version": "0.1.0",
   "identifier": "com.rachit.motosmartconnect",
   "build": {
@@ -14,14 +14,14 @@
     "macOSPrivateApi": true,
     "trayIcon": {
       "id": "smart-connect-tray",
-      "iconPath": "icons/32x32.png",
+      "iconPath": "icons/tray.png",
       "iconAsTemplate": true,
       "showMenuOnLeftClick": false
     },
     "windows": [
       {
         "label": "main",
-        "title": "Smart Connect",
+        "title": "Moto Smart Connect",
         "width": 1180,
         "height": 820,
         "minWidth": 900,

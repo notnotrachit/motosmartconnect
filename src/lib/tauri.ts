@@ -56,7 +56,27 @@ export const api = {
   revealFile: (path: string) => invoke<void>("reveal_file", { path }),
   listPhone: (path: string) => invoke<PhoneEntry[]>("list_phone", { path }),
   savePhone: (path: string) => invoke<string>("save_phone", { path }),
+
+  accountStatus: () => invoke<AccountView>("account_status"),
+  accountSignIn: () => invoke<AccountView>("account_sign_in"),
+  accountFinish: (url: string) => invoke<AccountView>("account_finish", { url }),
+  accountSignOut: () => invoke<AccountView>("account_sign_out"),
+  accountRefreshDevices: () => invoke<AccountView>("account_refresh_devices"),
+  accountConnect: (deviceId: string) => invoke<AccountView>("account_connect", { deviceId }),
 };
+
+export interface AccountDevice {
+  id: string;
+  name: string;
+  online: boolean;
+}
+
+export interface AccountView {
+  signedIn: boolean;
+  name: string;
+  detail: string;
+  devices: AccountDevice[];
+}
 
 export const events = {
   onSnapshot: (fn: (snapshot: Snapshot) => void): Promise<UnlistenFn> =>
@@ -67,6 +87,8 @@ export const events = {
     listen<MirrorView>("frame", (event) => fn(event.payload)),
   onWallpaper: (fn: (url: string) => void): Promise<UnlistenFn> =>
     listen<string>("wallpaper", (event) => fn(event.payload)),
+  onAccount: (fn: (account: AccountView) => void): Promise<UnlistenFn> =>
+    listen<AccountView>("account", (event) => fn(event.payload)),
 };
 
 /** Tauri rejects with plain strings; normalize anything thrown into readable text. */

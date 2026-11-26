@@ -31,6 +31,7 @@ export const useSnapshot = () => useEngine((s) => s.snapshot);
 export const usePhones = () => useEngine((s) => s.snapshot?.phones ?? (EMPTY as PhoneView[]));
 export const useConnectedPhone = () => useEngine((s) => s.snapshot?.phones?.find((p) => p.connected) ?? null);
 export const usePaired = () => useEngine((s) => (s.snapshot?.phones?.length ?? 0) > 0);
+export const usePhoneStatus = () => useEngine((s) => s.snapshot?.phoneStatus ?? null);
 export const useNotifications = () => useEngine((s) => s.snapshot?.notifications ?? EMPTY);
 const EMPTY_SMS: SmsView = { phase: "waiting", unread: 0, threads: [], openKey: "", openTitle: "", openAddress: "", open: [] };
 export const useMessages = () => useEngine((s) => s.snapshot?.messages ?? EMPTY_SMS);

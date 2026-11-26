@@ -24,7 +24,7 @@ export function AboutSection() {
       <div className="mb-7 flex items-center gap-4">
         <BrandMark size={52} className="rounded-2xl" />
         <div>
-          <p className="font-display text-base font-semibold text-fg">Smart Connect for Mac</p>
+          <p className="font-display text-base font-semibold text-fg">Moto Smart Connect</p>
           <p className="text-xs text-fg-muted">{version ? `Version ${version}` : "\u00a0"}</p>
           <p className="mt-1 max-w-[46ch] text-xs leading-relaxed text-fg-subtle">
             Unofficial macOS host for the Motorola Smart Connect phone app. Not affiliated with Motorola or Lenovo.

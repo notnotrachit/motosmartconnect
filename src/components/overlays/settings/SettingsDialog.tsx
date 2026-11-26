@@ -1,11 +1,12 @@
 import { AnimatePresence, motion } from "motion/react";
-import { Info, Palette, Smartphone, SlidersHorizontal, X, type LucideIcon } from "lucide-react";
+import { Cloud, Info, Palette, Smartphone, SlidersHorizontal, X, type LucideIcon } from "lucide-react";
 import { Dialog } from "@/components/ui/Dialog";
 import { IconButton } from "@/components/ui/IconButton";
 import { cn } from "@/lib/cn";
 import { usePhones } from "@/store/engine";
 import { useUi, type SettingsSection } from "@/store/ui";
 import { AboutSection } from "./AboutSection";
+import { AccountSection } from "./AccountSection";
 import { AppearanceSection } from "./AppearanceSection";
 import { GeneralSection } from "./GeneralSection";
 import { PhonesSection } from "./PhonesSection";
@@ -13,6 +14,7 @@ import { PhonesSection } from "./PhonesSection";
 const SECTIONS: { id: SettingsSection; label: string; icon: LucideIcon; render: () => React.JSX.Element }[] = [
   { id: "general", label: "General", icon: SlidersHorizontal, render: GeneralSection },
   { id: "phones", label: "Phones", icon: Smartphone, render: PhonesSection },
+  { id: "account", label: "Account", icon: Cloud, render: AccountSection },
   { id: "appearance", label: "Appearance", icon: Palette, render: AppearanceSection },
   { id: "about", label: "About", icon: Info, render: AboutSection },
 ];

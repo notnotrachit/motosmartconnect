@@ -2,6 +2,7 @@ import { useMemo, type ReactNode } from "react";
 import {
   Activity,
   Camera,
+  Cloud,
   Monitor,
   MousePointer2,
   Moon,
@@ -106,6 +107,7 @@ export function useCommands(): Command[] {
     list.push(
       { id: "settings", group: "App", title: "Settings", icon: <Settings2 size={15} />, shortcut: "⌘,", keywords: "preferences", run: () => ui().openSettings() },
       { id: "phones", group: "App", title: "Manage phones", icon: <Smartphone size={15} />, keywords: "forget paired", run: () => ui().openSettings("phones") },
+      { id: "account", group: "App", title: "Account", icon: <Cloud size={15} />, keywords: "lenovo motorola sign in internet cloud", run: () => ui().openSettings("account") },
       { id: "appearance", group: "App", title: "Appearance", icon: <Palette size={15} />, keywords: "theme accent color density", run: () => ui().openSettings("appearance") },
       {
         id: "theme",

@@ -6,7 +6,7 @@ const PANEL_HEIGHT: f64 = 520.0;
 /// Creates a small, app-styled panel that is shown from the menu bar icon.
 pub fn install<R: tauri::Runtime>(app: &tauri::App<R>) -> tauri::Result<()> {
     let panel = WebviewWindowBuilder::new(app, "tray-panel", WebviewUrl::App("menu.html".into()))
-        .title("Smart Connect")
+        .title("Moto Smart Connect")
         .inner_size(PANEL_WIDTH, PANEL_HEIGHT)
         .min_inner_size(PANEL_WIDTH, PANEL_HEIGHT)
         .max_inner_size(PANEL_WIDTH, PANEL_HEIGHT)
@@ -27,7 +27,7 @@ pub fn install<R: tauri::Runtime>(app: &tauri::App<R>) -> tauri::Result<()> {
     let tray_id = String::from("smart-connect-tray");
     let tray = app
         .tray_by_id(&tray_id)
-        .expect("configured Smart Connect menu bar icon");
+        .expect("configured Moto Smart Connect menu bar icon");
     tray.on_tray_icon_event(move |tray, event| {
         if let TrayIconEvent::Click {
             button: MouseButton::Left,

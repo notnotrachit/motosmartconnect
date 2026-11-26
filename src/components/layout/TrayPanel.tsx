@@ -13,6 +13,7 @@ import { useApplyPrefs } from "@/hooks/useApplyPrefs";
 import { cn } from "@/lib/cn";
 import { AppIcon } from "@/components/ui/AppIcon";
 import { iconFor, useIcons, useNotifications } from "@/store/engine";
+import { BrandMark } from "./Brand";
 
 const quick = "group flex min-w-0 flex-1 flex-col items-center gap-2 text-[11px] font-medium text-fg-muted transition hover:text-fg disabled:cursor-default disabled:opacity-40";
 
@@ -82,7 +83,10 @@ export function TrayPanel() {
     <div className="h-full p-2.5 text-fg">
       <div className="flex h-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(145deg,#263449_0%,#20252d_56%,#292c31_100%)] p-3.5 shadow-pop">
         <header className="flex items-center justify-between px-1 pb-3 text-[13px] font-semibold">
-          <span>Smart Connect</span>
+          <span className="flex items-center gap-1.5">
+            <BrandMark size={20} />
+            Moto Smart Connect
+          </span>
           <span className="flex items-center gap-1.5 text-xs font-medium text-fg-muted">
             <i className={cn("size-2 rounded-full", active ? "bg-success" : "bg-warning")} />
             {active ? "Connected" : paired ? "Paired" : "Not paired"}
@@ -170,10 +174,10 @@ export function TrayPanel() {
         </section>
 
         <nav className="mt-auto flex shrink-0 flex-col gap-0.5 pt-2">
-          <MenuRow icon={<Monitor size={15} />} label="Open Smart Connect" onClick={() => void openMain()} />
+          <MenuRow icon={<Monitor size={15} />} label="Open Moto Smart Connect" onClick={() => void openMain()} />
           <MenuRow icon={<QrCode size={15} />} label="Pair new phone…" onClick={() => void action("pair", api.beginPairing).then(() => openMain("pair"))} />
           <MenuRow icon={<Settings size={15} />} label="Settings…" onClick={() => void openMain("settings")} />
-          <MenuRow icon={<Power size={15} />} label="Quit Smart Connect" onClick={() => void action("quit", () => api.quit())} />
+          <MenuRow icon={<Power size={15} />} label="Quit Moto Smart Connect" onClick={() => void action("quit", () => api.quit())} />
         </nav>
       </div>
     </div>

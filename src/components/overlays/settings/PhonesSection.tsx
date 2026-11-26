@@ -3,9 +3,10 @@ import { AnimatePresence, motion } from "motion/react";
 import { Plus, Smartphone, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState, StatusDot } from "@/components/ui/Feedback";
+import { phoneStatusItems } from "@/components/layout/PhoneStatus";
 import { beginPairing, forgetPhone } from "@/engine/actions";
 import { confirm } from "@/store/confirm";
-import { usePhones } from "@/store/engine";
+import { usePhones, usePhoneStatus } from "@/store/engine";
 import { useUi } from "@/store/ui";
 import type { PhoneView } from "@/lib/types";
 
@@ -47,6 +48,8 @@ export function PhonesSection() {
 function PhoneRow({ phone }: { phone: PhoneView }) {
   const [busy, setBusy] = useState(false);
   const confirmForget = useUi((s) => s.prefs.confirmForget);
+  const phoneStatus = usePhoneStatus();
+  const live = phone.connected ? phoneStatus : null;
   const name = phone.name || "Phone";
   const status = phone.connected ? "Connected" : phone.userDisconnected ? "Disconnected on the phone" : "Saved · reconnects in the background";
 
@@ -80,6 +83,18 @@ function PhoneRow({ phone }: { phone: PhoneView }) {
       <div className="min-w-0 flex-1">
         <p className="truncate text-[0.8125rem] font-medium text-fg">{name}</p>
         <p className={phone.connected ? "text-xs text-success" : "text-xs text-fg-muted"}>{status}</p>
+        {live && (
+          <ul className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1" aria-label="Phone status">
+            {phoneStatusItems(live).map((item) => (
+              <li key={item.key} className={`flex items-center gap-1 text-[11px] ${item.tone}`}>
+                <item.icon size={11} aria-hidden="true" />
+                <span>
+                  {item.label}: {item.value}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <Button variant="ghost" size="sm" icon={<Trash2 size={12} />} loading={busy} onClick={forget} className="hover:text-danger">
         Forget

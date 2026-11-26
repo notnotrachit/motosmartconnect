@@ -16,7 +16,7 @@ export function BootScreen() {
         <BrandMark size={44} className="rounded-xl" />
         <div className="flex items-center gap-2 text-[0.8125rem]">
           <Spinner size={14} />
-          Starting Smart Connect…
+          Starting Moto Smart Connect…
         </div>
       </div>
     </motion.div>

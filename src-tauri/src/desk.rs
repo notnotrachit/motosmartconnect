@@ -82,6 +82,7 @@ struct Notice {
     can_reply: bool,
     actions: Vec<ActionView>,
     icon: String,
+    small_icon: String,
     fingerprint: String,
     shown_at: Instant,
 }
@@ -280,7 +281,7 @@ impl Desk {
                 content: notice.content.clone(),
                 can_reply: notice.can_reply,
                 actions: notice.actions.clone(),
-                icon: notice.icon.clone(),
+                icon: self.resolve_icon(&notice.pkg, &notice.icon, &notice.small_icon),
             })
             .collect()
     }
@@ -1084,7 +1085,9 @@ impl Desk {
                 actions.push(ActionView { id, name });
             }
         }
-        let icon = embedded_icon(&body).or_else(|| self.icon_url_for(&pkg)).unwrap_or_default();
+        let embedded = embedded_icon(&body).unwrap_or_default();
+        let small = apk_icon(&body).unwrap_or_default();
+        let icon = self.resolve_icon(&pkg, &embedded, &small);
         let fingerprint = format!("{title}\n{content}\n{}", actions.len());
         let previous = self.notifications.iter().find(|(id, _)| id == &key).map(|(_, notice)| notice.clone());
         if let Some(previous) = &previous {
@@ -1103,7 +1106,8 @@ impl Desk {
                 content: content.clone(),
                 can_reply,
                 actions,
-                icon: icon.clone(),
+                icon: embedded,
+                small_icon: small,
                 fingerprint: fingerprint.clone(),
                 shown_at: Instant::now(),
             },
@@ -1123,6 +1127,14 @@ impl Desk {
             });
         }
         effects
+    }
+
+    /// The icon to show for a notification: the phone's launcher icon when the app cache has it,
+    /// otherwise the icon the notification carried, otherwise the small `apk_icon`.
+    /// Resolved on every snapshot, so a notice that arrived before the cache loaded updates itself.
+    fn resolve_icon(&self, pkg: &str, embedded: &str, small: &str) -> String {
+        let fallback = if embedded.is_empty() { small } else { embedded };
+        self.icon_url_for(pkg).unwrap_or_else(|| fallback.to_string())
     }
 
     /// The phone app's icon, matched by the name the app list uses or by package.
@@ -1647,7 +1659,17 @@ fn clip_text(text: &str) -> String {
 }
 
 fn embedded_icon(body: &Value) -> Option<String> {
-    for key in ["icon", "largeIcon", "smallIcon", "appIcon", "picture"] {
+    image_in(body, &["icon", "largeIcon", "smallIcon", "appIcon", "picture"])
+}
+
+/// The phone's small app icon. Every notification carries it as base64 JPEG (`apk_icon`).
+/// It is a white glyph on black, so it only stands in when the launcher icon is missing.
+fn apk_icon(body: &Value) -> Option<String> {
+    image_in(body, &["apk_icon"])
+}
+
+fn image_in(body: &Value, keys: &[&str]) -> Option<String> {
+    for key in keys {
         let Some(text) = text_field(body, key) else { continue };
         if text.starts_with("data:image/") && text.len() < 400_000 {
             return Some(text);

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="tile" x1="164" y1="108" x2="858" y2="922" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#24496B"/>
+      <stop offset=".56" stop-color="#142A49"/>
+      <stop offset="1" stop-color="#10172F"/>
+    </linearGradient>
+    <radialGradient id="light" cx="800" cy="700" r="590" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#147B83" stop-opacity=".72"/>
+      <stop offset="1" stop-color="#147B83" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="199" y1="100" x2="716" y2="942" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BDE9FF" stop-opacity=".52"/>
+      <stop offset="1" stop-color="#65E8C8" stop-opacity=".15"/>
+    </linearGradient>
+    <linearGradient id="display" x1="267" y1="314" x2="606" y2="683" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F2FDFF"/>
+      <stop offset="1" stop-color="#A7CFF7"/>
+    </linearGradient>
+    <linearGradient id="phone" x1="623" y1="445" x2="763" y2="721" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BCFFEB"/>
+      <stop offset="1" stop-color="#51E5BE"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="264" y1="310" x2="582" y2="631" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A8E6FF" stop-opacity=".17"/>
+      <stop offset="1" stop-color="#A8E6FF" stop-opacity=".025"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="1024" height="1024" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="23"/>
+    </filter>
+  </defs>
+  <rect x="106" y="116" width="812" height="812" rx="192" fill="#0C1830" opacity=".43" filter="url(#shadow)"/>
+  <rect x="102" y="94" width="820" height="820" rx="192" fill="url(#tile)"/>
+  <rect x="102" y="94" width="820" height="820" rx="192" fill="url(#light)"/>
+  <rect x="106" y="98" width="812" height="812" rx="188" stroke="url(#rim)" stroke-width="8"/>
+  <path d="M666 365v-24a38 38 0 0 0-38-38H290a38 38 0 0 0-38 38v211a38 38 0 0 0 38 38h245V453c0-49 39-88 88-88z" fill="url(#glass)"/>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M666 365v-24a38 38 0 0 0-38-38H290a38 38 0 0 0-38 38v211a38 38 0 0 0 38 38h245m-88 0-17 87m-61 0h146" stroke="url(#display)" stroke-width="44"/>
+    <rect x="601" y="431" width="171" height="274" rx="37" stroke="url(#phone)" stroke-width="44"/>
+    <path d="M676 642h21" stroke="#81F6D7" stroke-width="26"/>
+  </g>
+</svg>

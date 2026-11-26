@@ -1,4 +1,4 @@
-# Smart Connect for Mac
+# Moto Smart Connect
 
 An unofficial Mac app for the Motorola Smart Connect app on your phone. Pair on the same Wi-Fi, then use the phone from the Mac: the screen, apps, files, notifications, and texts.
 
@@ -27,7 +27,7 @@ Hotspot is not offered. Turning that tile on can start tethering before the Mac 
 - macOS with Xcode command line tools
 - [Node.js](https://nodejs.org/) 20 or newer
 - [Rust](https://rustup.rs/) stable
-- The phone and the Mac on the same Wi-Fi
+- The phone and the Mac on the same Wi-Fi for the first pairing
 - Smart Connect installed on the phone
 
 The first time macOS asks, allow incoming connections and Bluetooth. Bluetooth is only used to wake a paired phone; the app does not turn the radio on. To use the lock tile, allow this app to control System Events under Privacy & Security. Notification banners outside the window need the usual macOS notification permission. The list inside the app does not.
@@ -41,7 +41,9 @@ npm run tauri dev
 
 The app listens on port 52020, or the next free port through 52040, and the pairing code uses whichever port opened. Quit any other Smart Connect host that is already listening on that port before you start this one.
 
-A paired phone is remembered. Starting this app wakes it over Bluetooth and on the local network, so Smart Connect can stay in the background. If Bluetooth is off, open Smart Connect on the phone instead. A phone that disconnected itself stays disconnected until you press Connect. There is no Lenovo account or cloud pairing.
+A paired phone is remembered. Starting this app wakes it over Bluetooth and on the local network, so Smart Connect can stay in the background. If Bluetooth is off, open Smart Connect on the phone instead. A phone that disconnected itself stays disconnected until you press Connect.
+
+Settings, Account signs in with the same Lenovo or Motorola account as the phone and asks Lenovo’s cloud broker for a tunnel. If the browser stays on passport.lenovo.com instead of opening this app, paste that full address into Account. The phone needs cloud connectivity on, and it still has to be paired once on Wi-Fi before screen and messages can use that tunnel. Whether the phone actually connects while it is off this Wi-Fi has to be checked that way; the app cannot confirm it from the Mac alone.
 
 ## Keyboard
 
@@ -55,7 +57,7 @@ These work when the phone screen and the control pad do not have focus. Keys typ
 | ⌘1–5 | Notifications, Messages, Apps, Files, Control |
 | Esc | Close a sheet or menu |
 
-Settings cover the Mac’s name, theme, accent, and the list of paired phones.
+Settings cover the Mac’s name, theme, accent, the Lenovo or Motorola account, and the list of paired phones.
 
 ## Where things are stored
 
@@ -65,7 +67,7 @@ Identity, the pairing certificate, and the saved phones live in:
 ~/Library/Application Support/MotoSmartConnect/identity.json
 ```
 
-The certificate is self-signed and stays the same across launches. The phone remembers that fingerprint, so replacing the file means pairing again.
+The certificate is self-signed and stays the same across launches. The phone remembers that fingerprint, so replacing the file means pairing again. Account sign-in, when you use it, is stored beside that file as `account.json` and is not written to the log.
 
 Forgetting a phone removes it from this Mac. If the phone is connected at the time, the app also tells it the pair is gone.
 

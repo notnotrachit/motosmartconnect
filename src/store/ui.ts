@@ -7,7 +7,7 @@ export const TABS: Tab[] = ["notifications", "messages", "apps", "files", "contr
 export type ThemePref = "system" | "light" | "dark";
 export type Accent = "green" | "blue" | "violet" | "amber" | "rose";
 export type Density = "comfortable" | "compact";
-export type SettingsSection = "general" | "phones" | "appearance" | "about";
+export type SettingsSection = "general" | "phones" | "account" | "appearance" | "about";
 
 export interface Prefs {
   theme: ThemePref;

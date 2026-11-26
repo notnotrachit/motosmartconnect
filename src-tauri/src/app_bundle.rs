@@ -35,7 +35,7 @@ pub fn adopt_bundle() {
 
 fn prepare(exe: &Path) -> Option<PathBuf> {
     let name = exe.file_name()?.to_str()?;
-    let root = exe.parent()?.join("Smart Connect.app");
+    let root = exe.parent()?.join("Moto Smart Connect.app");
     let macos = root.join("Contents/MacOS");
     let resources = root.join("Contents/Resources");
     std::fs::create_dir_all(&macos).ok()?;
@@ -64,10 +64,10 @@ fn sign_bundle(root: &Path) {
         Ok(output) if output.status.success() => {}
         Ok(output) => {
             let err = String::from_utf8_lossy(&output.stderr);
-            eprintln!("Smart Connect: debug bundle was not signed ({err}). macOS will not ask for Bluetooth.");
+            eprintln!("Moto Smart Connect: debug bundle was not signed ({err}). macOS will not ask for Bluetooth.");
         }
         Err(err) => {
-            eprintln!("Smart Connect: debug bundle was not signed ({err}). macOS will not ask for Bluetooth.");
+            eprintln!("Moto Smart Connect: debug bundle was not signed ({err}). macOS will not ask for Bluetooth.");
         }
     }
 }
@@ -81,9 +81,9 @@ fn plist(executable: &str) -> String {
   <key>CFBundleIdentifier</key>
   <string>com.rachit.motosmartconnect</string>
   <key>CFBundleName</key>
-  <string>Smart Connect</string>
+  <string>Moto Smart Connect</string>
   <key>CFBundleDisplayName</key>
-  <string>Smart Connect</string>
+  <string>Moto Smart Connect</string>
   <key>CFBundleExecutable</key>
   <string>{executable}</string>
   <key>CFBundleIconFile</key>
@@ -99,12 +99,23 @@ fn plist(executable: &str) -> String {
   <key>NSHighResolutionCapable</key>
   <true/>
   <key>NSBluetoothAlwaysUsageDescription</key>
-  <string>Smart Connect uses Bluetooth to wake your paired phone. It does not turn Bluetooth on.</string>
+  <string>Moto Smart Connect uses Bluetooth to wake your paired phone. It does not turn Bluetooth on.</string>
   <key>NSLocalNetworkUsageDescription</key>
-  <string>Smart Connect finds your phone on the local network and accepts its connection.</string>
+  <string>Moto Smart Connect finds your phone on the local network and accepts its connection.</string>
   <key>NSBonjourServices</key>
   <array>
     <string>_readyformdns._tcp</string>
+  </array>
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLName</key>
+      <string>com.rachit.motosmartconnect.auth</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>smartconnect</string>
+      </array>
+    </dict>
   </array>
 </dict>
 </plist>
